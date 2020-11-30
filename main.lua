@@ -1,13 +1,22 @@
 function love.conf() -- ?
-  love.window.width = 500
+  love.window.width = 450
   love.window.height = 300
   love.window.borderless = true
   love.window.resizable = true
 end
 
+function boardNew()
+  repeat --  3^9 possibilités = 19683.
+    boardRand = {{-1 +love.math.random( 3 ),-1 +love.math.random( 3 ),-1 +love.math.random( 3 )}, {-1 +love.math.random( 3 ),-1 +love.math.random( 3 ),-1 +love.math.random( 3 )}, {-1 +love.math.random( 3 ),-1 +love.math.random( 3 ),-1 +love.math.random( 3 )}} -- 0, 1, or 2 -- Later: more 0 if winAtStart
+    board = boardRand
+  until (winAtStart(board) == false) -- No win at start.
+
+  return boardRand
+end
+
 function love.load()
   love.graphics.setBackgroundColor(0.3,0.2, 0.1) 
-  x, y, w, h = 10, 70, 120, 120  
+  x, y, w, h = 10, 100, 120, 120  
   xm, ym = 0, 0
   love.graphics.setLineWidth( h/10 )
 -- logo = love.graphics.newImage("Lua-Logo_128x128.png")
@@ -17,23 +26,39 @@ function love.load()
   love.window.setTitle(title)
   playerToPlay = love.math.random( 2 ) -- 1 or 2
   displayMenu = true
-  boardNew = {{0,0,0}, {0,0,0}, {0,0,0}}
+  board = {{0,0,0}, {0,0,0}, {0,0,0}}
   -- sauver
   -- lire
+  IAX = 0
+  IAO = 0
+  boardRand=boardNew()
 
-  board = boardNew
-  repeat --  3^9 possibilités = 19683.
-    boardRand = {{-1 +love.math.random( 3 ),-1 +love.math.random( 3 ),-1 +love.math.random( 3 )}, {-1 +love.math.random( 3 ),-1 +love.math.random( 3 ),-1 +love.math.random( 3 )}, {-1 +love.math.random( 3 ),-1 +love.math.random( 3 ),-1 +love.math.random( 3 )}} -- 0, 1, or 2 -- Later: more 0 if winAtStart
-    board = boardRand
-  until (winAtStart(board) == false) -- No win at start.
-
-  NewFS = "New game from nothing."
-  Exercise = "New exercise from random."
+  Exercise = "New exercise from random: F2."
+  NewFS = "New game from nothing: F4."
+  esQ = "Escape to quit."
 end
-
 
 function colorText()
   love.graphics.setColor(0, 1, 1)
+end
+
+
+function love.keyreleased(key)
+  if(displayMenu == true) then
+    if key == "escape" then
+      love.event.quit()
+    end
+    if key == "f4" then
+      board = {{0,0,0}, {0,0,0}, {0,0,0}}
+    end
+
+    if key == "f2" then
+      board =  boardNew()
+    end
+
+
+  end
+  displayMenu = false
 end
 
 
@@ -95,17 +120,17 @@ function love.mousepressed(xm, ym, button, istouch)
     -- love.graphics.print("".. xm, 550, 10) 
     i=math.floor((xm-x)/w) +1
     j=math.floor((ym-y)/h)+1
-    
-    if (board[i][j]==0) then
-    board[i][j] = playerToPlay
-    playerToPlay = 3 - playerToPlay
+
+    if ((board[i][j]==0) and (displayMenu == false)) then
+      board[i][j] = playerToPlay
+      playerToPlay = 3 - playerToPlay
     end
   end
 end
 
 function love.update(dt)
 
-  displayMenu = true
+  -- displayMenu = true
 
 end
 
@@ -132,28 +157,52 @@ function love.draw()
 
   if (win(board)==1) then
     colorGraphs(1)
-    love.graphics.print("Player 1 O wins!", 10, 10)
+    love.graphics.print("Player O wins!", 10, 10)
     displayMenu = true
   end
   if (win(board)==2) then
     colorGraphs(2)
-    love.graphics.print("Player 2 X wins!", 10, 10)
+    love.graphics.print("Player X wins!", 10, 10)
     displayMenu = true
   end 
   if (win(board)==0) then
-    displayMenu = false
-    colorBkBoard()
-    colorText()
-    love.graphics.print("Player to play: ", 10, 10)
-    colorGraphs(playerToPlay)
-    love.graphics.print(playerToPlayXO(playerToPlay), 100, 10)
-    colorText()
+
+    full = true
+    for i = 1, 3 do
+      for j = 1, 3 do
+        if (board[i][j] == 0) then
+          full = false
+        end
+      end
+
+    end
+
+    if (full == true)    then
+      love.graphics.print("Draw!", 10, 10)
+      displayMenu = true
+
+    else
+
+
+
+
+      displayMenu = false
+      colorBkBoard()
+      colorText()
+      love.graphics.print("Player to play: ", 10, 10)
+      colorGraphs(playerToPlay)
+      love.graphics.print(playerToPlayXO(playerToPlay), 100, 10)
+      colorText()
+    end
   end
   colorText()
 
   if (displayMenu == true) then
-    love.graphics.print(NewFS, 10, 30)
-    love.graphics.print(Exercise, 10, 50)
+
+    love.graphics.print(Exercise, 10, 30)
+    love.graphics.print(NewFS, 10, 50)
+    love.graphics.print(esQ, 10, 70)
+
   end
   colorBkBoard()
   love.graphics.rectangle("fill", x, y, 3*w, 3*h)
